@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Portal de Produção Comercial</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="topbar__title">
+        <h1 id="portal-title">Portal de Produção Comercial</h1>
+        <p id="report-meta" class="topbar__meta">Carregando dados…</p>
+      </div>
+      <div class="topbar__actions">
+        <span id="sync-dot" class="sync-dot" title="Status da sincronização"></span>
+        <span id="sync-label" class="sync-label">—</span>
+        <button id="btn-upload" class="btn btn--ghost" type="button">Carregar planilha</button>
+        <button id="btn-sync" class="btn btn--primary" type="button">Atualizar agora</button>
+        <input id="file-input" type="file" accept=".xlsx,.xls" hidden />
+      </div>
+    </header>
+
+    <main class="content">
+      <section class="filters" aria-label="Filtros">
+        <input id="f-search" class="filters__search" type="search" placeholder="Buscar loja…" />
+        <select id="f-regional"><option value="">Regional (todas)</option></select>
+        <select id="f-gerente"><option value="">Ger. Reg. Varejo (todos)</option></select>
+        <select id="f-coordenador"><option value="">Coordenador (todos)</option></select>
+        <select id="f-encarregado"><option value="">Encarregado (todos)</option></select>
+        <button id="f-clear" class="btn btn--link" type="button">Limpar filtros</button>
+        <span id="f-count" class="filters__count"></span>
+      </section>
+
+      <section aria-label="Indicadores principais">
+        <h2 class="section-title">Indicadores principais</h2>
+        <div id="kpi-primary" class="kpi-grid kpi-grid--primary"></div>
+      </section>
+
+      <section aria-label="Produtos Vuon">
+        <h2 class="section-title">Produtos Vuon</h2>
+        <div id="kpi-products" class="kpi-grid kpi-grid--products"></div>
+      </section>
+
+      <section class="panel" aria-label="Ranking e lojas">
+        <div class="panel__tabs">
+          <button class="tab is-active" data-tab="ranking">Ranking</button>
+          <button class="tab" data-tab="lojas">Lojas</button>
+        </div>
+
+        <div id="tab-ranking" class="tab-panel is-active">
+          <div class="panel__controls">
+            <label for="rank-metric">Ordenar por</label>
+            <select id="rank-metric"></select>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Loja</th>
+                <th>Encarregado</th>
+                <th>Regional</th>
+                <th>Meta</th>
+                <th>Realizado</th>
+                <th>% Meta</th>
+              </tr>
+            </thead>
+            <tbody id="rank-body"></tbody>
+          </table>
+        </div>
+
+        <div id="tab-lojas" class="tab-panel">
+          <div class="panel__controls">
+            <label for="store-metric">Indicador</label>
+            <select id="store-metric"></select>
+          </div>
+          <table class="table" id="store-table">
+            <thead>
+              <tr>
+                <th data-sort="loja">Loja</th>
+                <th data-sort="encarregado">Encarregado</th>
+                <th data-sort="coordenador">Coordenador</th>
+                <th data-sort="regional">Regional</th>
+                <th data-sort="meta">Meta</th>
+                <th data-sort="realizado">Realizado</th>
+                <th data-sort="pct">% Meta</th>
+              </tr>
+            </thead>
+            <tbody id="store-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <span>Atualização automática a cada <span id="footer-interval">30</span> min a partir do extrato da RPE.</span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <script src="app.js"></script>
+</body>
+</html>

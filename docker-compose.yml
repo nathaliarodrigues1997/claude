@@ -5,4 +5,21 @@ services:
       - "3000:3000"
     environment:
       - PORT=3000
+      - PORTAL_TITLE=${PORTAL_TITLE:-Portal de Produção Comercial}
+      - DATA_DIR=/data
+      - SYNC_INTERVAL_MINUTES=${SYNC_INTERVAL_MINUTES:-30}
+      - SFTP_HOST=${SFTP_HOST:-}
+      - SFTP_PORT=${SFTP_PORT:-22}
+      - SFTP_USER=${SFTP_USER:-}
+      - SFTP_PASSWORD=${SFTP_PASSWORD:-}
+      - SFTP_PRIVATE_KEY_PATH=${SFTP_PRIVATE_KEY_PATH:-}
+      - SFTP_REMOTE_PATH=${SFTP_REMOTE_PATH:-/}
+      - SFTP_FILE_MATCH=${SFTP_FILE_MATCH:-}
+      - BASIC_AUTH_USER=${BASIC_AUTH_USER:-}
+      - BASIC_AUTH_PASS=${BASIC_AUTH_PASS:-}
+    volumes:
+      - portal-data:/data
     restart: unless-stopped
+
+volumes:
+  portal-data:
