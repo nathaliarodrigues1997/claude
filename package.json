@@ -1,12 +1,20 @@
 {
-  "name": "claude",
+  "name": "portal-producao-comercial",
   "version": "1.0.0",
-  "description": "Minimal containerized Node.js app",
-  "main": "index.js",
+  "description": "Portal de acompanhamento da produção comercial, alimentado automaticamente pelo extrato recebido da RPE.",
+  "main": "src/server.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node src/server.js",
+    "seed": "node scripts/seed.js"
   },
   "engines": {
     "node": ">=20"
+  },
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^2.0.1",
+    "ssh2-sftp-client": "^10.0.3",
+    "xlsx": "^0.18.5"
   }
 }
