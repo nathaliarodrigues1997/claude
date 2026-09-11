@@ -65,4 +65,28 @@ function buildSnapshot(realizadoFactor) {
 store.saveSnapshot({ stores: buildSnapshot(0.35), reportGeneratedAt: new Date(Date.now() - 86400000).toISOString(), source: 'seed:ontem' });
 store.saveSnapshot({ stores: buildSnapshot(0.55), reportGeneratedAt: new Date().toISOString(), source: 'seed:hoje' });
 
+// O upsert diário do store.js só grava o ponto de "hoje" (syncedAt real). Para o gráfico
+// de tendência ter o que mostrar em ambiente de demonstração, injeta alguns dias
+// fictícios de histórico direto no snapshot salvo.
+const fs = require('fs');
+const path = require('path');
+const config = require('../src/config');
+const file = path.join(config.dataDir, 'snapshot.json');
+const state = JSON.parse(fs.readFileSync(file, 'utf8'));
+const keys = ['aprovacao', 'ativacao', 'servicos', 'fatura_garantida', 'odonto', 'auto_moto', 'casa_protegida', 'vida_premiada', 'pet'];
+const extraDays = 9;
+const fake = [];
+for (let d = extraDays; d >= 1; d--) {
+  const date = new Date(Date.now() - d * 86400000).toISOString().slice(0, 10);
+  const totals = {};
+  for (const key of keys) {
+    const base = state.current.stores.reduce((sum, s) => sum + (s.metrics[key] ? s.metrics[key].meta : 0), 0);
+    const progress = (extraDays - d + 1) / (extraDays + 1);
+    totals[key] = { meta: Math.round(base * 100) / 100, realizado: Math.round(base * progress * (0.6 + Math.random() * 0.3) * 100) / 100 };
+  }
+  fake.push({ date, totals });
+}
+state.dailySeries = [...fake, ...state.dailySeries];
+fs.writeFileSync(file, JSON.stringify(state, null, 2));
+
 console.log('Dados de demonstração gerados em data/snapshot.json');

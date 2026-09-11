@@ -8,12 +8,23 @@
 </head>
 <body>
   <div class="app">
-    <header class="topbar">
-      <div class="topbar__title">
-        <h1 id="portal-title">Portal de Produção Comercial</h1>
-        <p id="report-meta" class="topbar__meta">Carregando dados…</p>
+    <header class="navbar">
+      <div class="navbar__brand">
+        <span class="navbar__mark">V</span>
+        <div>
+          <h1 id="portal-title">Portal de Produção Comercial</h1>
+          <p id="report-meta" class="navbar__meta">Carregando dados…</p>
+        </div>
       </div>
-      <div class="topbar__actions">
+
+      <nav class="navbar__tabs" id="view-tabs">
+        <button class="navtab is-active" data-view="inicio">Início</button>
+        <button class="navtab" data-view="grafico">Gráfico Vendas</button>
+        <button class="navtab" data-view="painel">Painel Comercial</button>
+        <button class="navtab" data-view="ranking">Ranking</button>
+      </nav>
+
+      <div class="navbar__actions">
         <span id="sync-dot" class="sync-dot" title="Status da sincronização"></span>
         <span id="sync-label" class="sync-label">—</span>
         <button id="btn-upload" class="btn btn--ghost" type="button">Carregar planilha</button>
@@ -33,64 +44,118 @@
         <span id="f-count" class="filters__count"></span>
       </section>
 
-      <section aria-label="Indicadores principais">
-        <h2 class="section-title">Indicadores principais</h2>
-        <div id="kpi-primary" class="kpi-grid kpi-grid--primary"></div>
-      </section>
+      <div id="view-inicio" class="view is-active">
+        <section aria-label="Indicadores principais">
+          <h2 class="section-title">Indicadores principais</h2>
+          <div id="kpi-primary" class="kpi-grid kpi-grid--primary"></div>
+        </section>
 
-      <section aria-label="Produtos Vuon">
-        <h2 class="section-title">Produtos Vuon</h2>
-        <div id="kpi-products" class="kpi-grid kpi-grid--products"></div>
-      </section>
+        <section aria-label="Produtos Vuon">
+          <h2 class="section-title">Produtos Vuon</h2>
+          <div id="kpi-products" class="kpi-grid kpi-grid--products"></div>
+        </section>
+      </div>
 
-      <section class="panel" aria-label="Ranking e lojas">
-        <div class="panel__tabs">
-          <button class="tab is-active" data-tab="ranking">Ranking</button>
-          <button class="tab" data-tab="lojas">Lojas</button>
-        </div>
+      <div id="view-grafico" class="view">
+        <section class="panel" aria-label="Tendência">
+          <div class="panel__header">
+            <h2 class="section-title section-title--inline">Vendas por dia e acumulado no mês</h2>
+            <div class="panel__controls">
+              <label for="chart-metric">Indicador</label>
+              <select id="chart-metric"></select>
+            </div>
+          </div>
+          <div id="chart-container" class="chart-container"></div>
+        </section>
+      </div>
 
-        <div id="tab-ranking" class="tab-panel is-active">
-          <div class="panel__controls">
-            <label for="rank-metric">Ordenar por</label>
-            <select id="rank-metric"></select>
+      <div id="view-painel" class="view">
+        <section class="panel" aria-label="Painel comercial">
+          <div class="subtabs" id="painel-subtabs">
+            <button class="subtab is-active" data-subview="regional">Regional</button>
+            <button class="subtab" data-subview="coordenadoras">Coordenadoras</button>
+            <button class="subtab" data-subview="lojas">Lojas</button>
+          </div>
+
+          <div id="painel-regional" class="subview is-active">
+            <div class="table-scroll">
+              <table class="table table--wide" id="painel-table">
+                <thead id="painel-head"></thead>
+                <tbody id="painel-body"></tbody>
+              </table>
+            </div>
+          </div>
+
+          <div id="painel-coordenadoras" class="subview">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Coordenador</th>
+                  <th>Regional</th>
+                  <th>Meta</th>
+                  <th>Atual</th>
+                  <th>% Meta</th>
+                  <th>Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="coord-body"></tbody>
+            </table>
+          </div>
+
+          <div id="painel-lojas" class="subview">
+            <div class="panel__controls" style="margin-bottom:12px">
+              <label for="store-metric">Indicador</label>
+              <select id="store-metric"></select>
+            </div>
+            <table class="table" id="store-table">
+              <thead>
+                <tr>
+                  <th data-sort="loja">Loja</th>
+                  <th data-sort="encarregado">Encarregado</th>
+                  <th data-sort="coordenador">Coordenador</th>
+                  <th data-sort="regional">Regional</th>
+                  <th data-sort="meta">Meta</th>
+                  <th data-sort="realizado">Realizado</th>
+                  <th data-sort="pct">% Meta</th>
+                </tr>
+              </thead>
+              <tbody id="store-body"></tbody>
+            </table>
+          </div>
+        </section>
+      </div>
+
+      <div id="view-ranking" class="view">
+        <section class="panel" aria-label="Ranking">
+          <div class="panel__header">
+            <h2 class="section-title section-title--inline">Ranking por % meta</h2>
+            <div class="panel__controls">
+              <label for="rank-group">Agrupar por</label>
+              <select id="rank-group">
+                <option value="loja">Loja</option>
+                <option value="encarregado">Encarregado</option>
+                <option value="coordenador">Coordenador</option>
+              </select>
+              <label for="rank-metric">Indicador</label>
+              <select id="rank-metric"></select>
+            </div>
           </div>
           <table class="table">
             <thead>
               <tr>
                 <th>#</th>
-                <th>Loja</th>
-                <th>Encarregado</th>
+                <th id="rank-col-group">Loja</th>
                 <th>Regional</th>
                 <th>Meta</th>
                 <th>Realizado</th>
                 <th>% Meta</th>
+                <th>Saldo</th>
               </tr>
             </thead>
             <tbody id="rank-body"></tbody>
           </table>
-        </div>
-
-        <div id="tab-lojas" class="tab-panel">
-          <div class="panel__controls">
-            <label for="store-metric">Indicador</label>
-            <select id="store-metric"></select>
-          </div>
-          <table class="table" id="store-table">
-            <thead>
-              <tr>
-                <th data-sort="loja">Loja</th>
-                <th data-sort="encarregado">Encarregado</th>
-                <th data-sort="coordenador">Coordenador</th>
-                <th data-sort="regional">Regional</th>
-                <th data-sort="meta">Meta</th>
-                <th data-sort="realizado">Realizado</th>
-                <th data-sort="pct">% Meta</th>
-              </tr>
-            </thead>
-            <tbody id="store-body"></tbody>
-          </table>
-        </div>
-      </section>
+        </section>
+      </div>
     </main>
 
     <footer class="footer">

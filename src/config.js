@@ -29,4 +29,9 @@ module.exports = {
     user: process.env.BASIC_AUTH_USER || '',
     pass: process.env.BASIC_AUTH_PASS || '',
   },
+
+  // Chave usada pelo n8n (ou qualquer automação) para chamar POST /api/upload e
+  // POST /api/sync sem precisar das credenciais de acesso ao portal. Deixe em
+  // branco só em ambiente local de teste.
+  ingestApiKey: process.env.INGEST_API_KEY || '',
 };

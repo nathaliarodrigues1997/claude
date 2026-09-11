@@ -12,7 +12,10 @@ if (config.auth.user && config.auth.pass) {
     const [scheme, encoded] = header.split(' ');
     if (scheme === 'Basic' && encoded) {
       const [user, pass] = Buffer.from(encoded, 'base64').toString('utf8').split(':');
-      if (user === config.auth.user && pass === config.auth.pass) return next();
+      if (user === config.auth.user && pass === config.auth.pass) {
+        req.viaBasicAuth = true;
+        return next();
+      }
     }
     res.set('WWW-Authenticate', 'Basic realm="Portal de Produção Comercial"');
     res.status(401).send('Autenticação necessária.');
