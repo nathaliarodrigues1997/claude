@@ -14,6 +14,8 @@
     pet: '<circle cx="7" cy="9" r="1.6" fill="currentColor" stroke="none"/><circle cx="12" cy="6.5" r="1.6" fill="currentColor" stroke="none"/><circle cx="17" cy="9" r="1.6" fill="currentColor" stroke="none"/><path d="M8 16.5c0-2.3 1.8-4 4-4s4 1.7 4 4-1.8 3-4 3-4-.7-4-3z"/>',
   };
 
+  const MONTHS_PT = ['janeiro', 'fevereiro', 'março', 'abril', 'maio', 'junho', 'julho', 'agosto', 'setembro', 'outubro', 'novembro', 'dezembro'];
+
   function iconSvg(key) {
     const inner = ICONS[key] || ICONS.servicos;
     return `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${inner}</svg>`;
@@ -36,9 +38,17 @@
   const fmt = (n) => new Intl.NumberFormat('pt-BR', { maximumFractionDigits: 1 }).format(n || 0);
   const fmtPct = (n) => `${((n || 0) * 100).toFixed(1)}%`;
 
+  // Segue os limiares do protótipo Vuon: 0% é "sem dado ainda" (neutro), não "ruim".
   function pctClass(pct) {
-    if (pct >= 0.9) return 'good';
+    if (pct >= 0.8) return 'good';
     if (pct >= 0.5) return 'warn';
+    if (pct > 0) return 'bad';
+    return 'neutral';
+  }
+
+  function saldoClass(saldo) {
+    if (saldo >= 0) return 'good';
+    if (saldo >= -10) return 'warn';
     return 'bad';
   }
 
@@ -86,7 +96,7 @@
       realizado += m.realizado;
     }
     const pct = meta > 0 ? realizado / meta : 0;
-    return { meta, realizado, pct };
+    return { meta, realizado, pct, saldo: realizado - meta };
   }
 
   // --- navegação entre views -------------------------------------------------
@@ -190,6 +200,9 @@
     const container = $('#chart-container');
     const series = state.dailySeries.filter((p) => p.totals[key]);
 
+    const now = new Date();
+    $('#chart-subtitle').textContent = `${MONTHS_PT[now.getMonth()]} de ${now.getFullYear()}`;
+
     if (series.length < 2) {
       container.innerHTML = `<div class="chart-empty">Ainda não há histórico suficiente para o gráfico — ele se preenche a cada sincronização (a cada ${$('#footer-interval').textContent || 30} min).</div>`;
       return;
@@ -216,12 +229,12 @@
     const showEvery = Math.max(1, Math.ceil(n / 10));
 
     const bars = deltas
-      .map((v, i) => `<rect x="${(xAt(i) - barW / 2).toFixed(1)}" y="${yBar(v).toFixed(1)}" width="${barW.toFixed(1)}" height="${(margin.top + plotH - yBar(v)).toFixed(1)}" rx="3" fill="var(--violet-500)" opacity="0.85"/>`)
+      .map((v, i) => `<rect x="${(xAt(i) - barW / 2).toFixed(1)}" y="${yBar(v).toFixed(1)}" width="${barW.toFixed(1)}" height="${(margin.top + plotH - yBar(v)).toFixed(1)}" rx="5" fill="var(--primary)"/>`)
       .join('');
 
     const linePoints = cumulative.map((v, i) => `${xAt(i).toFixed(1)},${yLine(v).toFixed(1)}`).join(' ');
     const dots = cumulative
-      .map((v, i) => `<circle cx="${xAt(i).toFixed(1)}" cy="${yLine(v).toFixed(1)}" r="3.5" fill="var(--accent-line)"/>`)
+      .map((v, i) => `<circle cx="${xAt(i).toFixed(1)}" cy="${yLine(v).toFixed(1)}" r="4" fill="var(--bad)"/>`)
       .join('');
 
     const xLabels = series
@@ -239,13 +252,13 @@
       <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de vendas por dia e acumulado no mês">
         ${gridY}
         ${bars}
-        <polyline points="${linePoints}" fill="none" stroke="var(--accent-line)" stroke-width="2.5"/>
+        <polyline points="${linePoints}" fill="none" stroke="var(--bad)" stroke-width="2.5"/>
         ${dots}
         ${xLabels}
       </svg>
       <div class="chart-legend" style="display:flex;gap:16px;margin-top:6px;font-size:0.76rem;color:var(--text-muted)">
-        <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--violet-500);margin-right:5px"></span>Realizado no dia</span>
-        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--accent-line);margin-right:5px"></span>Acumulado no mês</span>
+        <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--primary);margin-right:5px"></span>Vendas do dia</span>
+        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--bad);margin-right:5px"></span>Acumulado mês</span>
       </div>`;
   }
 
@@ -267,7 +280,20 @@
     return [...groups.values()];
   }
 
-  // --- painel comercial (rollup por encarregado) --------------------------------
+  // --- painel comercial > regional (rollup por encarregado) ---------------------
+  // Colunas espelham a tabela "Modelo Robô — Regional" do protótipo: cada produto
+  // mostra só meta/atual (sem % individual); % e saldo aparecem para Aprovação e Ativação.
+
+  const PAINEL_COLUMNS = [
+    { key: 'aprovacao', metaLabel: 'Meta', realLabel: 'Atual', pct: true, saldo: true },
+    { key: 'ativacao', metaLabel: 'Ativação', realLabel: 'Atual Ativ.', pct: true, pctLabel: '% Ativ.', extra: 'taxa' },
+    { key: 'fatura_garantida', metaLabel: 'Fat. Gar.', realLabel: 'Atual Fat.' },
+    { key: 'odonto', metaLabel: 'Odonto', realLabel: 'At. Odonto' },
+    { key: 'auto_moto', metaLabel: 'Auto/Moto', realLabel: 'At. Auto' },
+    { key: 'casa_protegida', metaLabel: 'Casa Prot.', realLabel: 'At. Casa' },
+    { key: 'vida_premiada', metaLabel: 'Vida Prem.', realLabel: 'At. Vida' },
+    { key: 'pet', metaLabel: 'Pet', realLabel: 'At. Pet' },
+  ];
 
   function renderPainel() {
     const stores = filteredStores(state.current);
@@ -282,47 +308,44 @@
 
     const rows = [...groups.values()].map((g) => {
       const metrics = {};
-      for (const def of state.metricDefs) metrics[def.key] = sumMetric(g.stores, def.key);
+      for (const col of PAINEL_COLUMNS) metrics[col.key] = sumMetric(g.stores, col.key);
       return { ...g, metrics };
     });
-    rows.sort((a, b) => (b.metrics.servicos?.pct || 0) - (a.metrics.servicos?.pct || 0));
+    rows.sort((a, b) => (b.metrics.aprovacao?.pct || 0) - (a.metrics.aprovacao?.pct || 0));
 
     const totalMetrics = {};
-    for (const def of state.metricDefs) totalMetrics[def.key] = sumMetric(stores, def.key);
+    for (const col of PAINEL_COLUMNS) totalMetrics[col.key] = sumMetric(stores, col.key);
 
     const head = $('#painel-head');
     head.innerHTML = `
-      <tr class="painel-head-metrics">
-        <th rowspan="2" style="background:var(--surface-2);color:var(--text)">Encarregado</th>
-        <th rowspan="2" style="background:var(--surface-2);color:var(--text)">Coordenador</th>
-        <th rowspan="2" style="background:var(--surface-2);color:var(--text)">Regional</th>
-        ${state.metricDefs.map((d) => `<th colspan="3">${d.label}</th>`).join('')}
-      </tr>
-      <tr class="painel-head-sub">
-        ${state.metricDefs.map(() => `<th>Meta</th><th>Atual</th><th>%</th>`).join('')}
+      <tr class="table-head-gradient">
+        <th>Encarregado</th>
+        <th>Regional</th>
+        ${PAINEL_COLUMNS.map((c) => `<th class="num">${c.metaLabel}</th><th class="num">${c.realLabel}</th>${c.pct ? `<th class="num">${c.pctLabel || '% Meta'}</th>` : ''}${c.saldo ? `<th class="num">Saldo</th>` : ''}${c.extra === 'taxa' ? `<th class="num">Taxa</th>` : ''}`).join('')}
       </tr>`;
 
-    const renderRow = (label, metrics, isTotal) => `
+    const renderRow = (label, regional, metrics, isTotal) => `
       <tr${isTotal ? ' style="font-weight:700;background:var(--surface-2)"' : ''}>
-        <td class="group-col">${escapeHtml(label.encarregado || label)}</td>
-        <td>${label.coordenador ? escapeHtml(label.coordenador) : ''}</td>
-        <td>${label.regional ? escapeHtml(label.regional) : ''}</td>
-        ${state.metricDefs
-          .map((d) => {
-            const m = metrics[d.key] || { meta: 0, realizado: 0, pct: 0 };
-            return `<td class="num">${fmt(m.meta)}</td><td class="num">${fmt(m.realizado)}</td><td class="num"><span class="pct-chip ${pctClass(m.pct)}">${fmtPct(m.pct)}</span></td>`;
-          })
-          .join('')}
+        <td class="group-col">${escapeHtml(label)}</td>
+        <td>${regional ? escapeHtml(regional) : ''}</td>
+        ${PAINEL_COLUMNS.map((c) => {
+          const m = metrics[c.key] || { meta: 0, realizado: 0, pct: 0, saldo: 0, taxa: 0 };
+          let cells = `<td class="num">${fmt(m.meta)}</td><td class="num">${fmt(m.realizado)}</td>`;
+          if (c.pct) cells += `<td class="num"><span class="pct-chip ${pctClass(m.pct)}">${fmtPct(m.pct)}</span></td>`;
+          if (c.saldo) cells += `<td class="num"><span class="pct-chip ${saldoClass(m.saldo)}">${fmt(m.saldo)}</span></td>`;
+          if (c.extra === 'taxa') cells += `<td class="num">${fmtPct(m.taxa || 0)}</td>`;
+          return cells;
+        }).join('')}
       </tr>`;
 
     const body = $('#painel-body');
     if (!rows.length) {
-      body.innerHTML = `<tr><td colspan="${3 + state.metricDefs.length * 3}" class="empty-state">Nenhuma loja encontrada para os filtros atuais.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="20" class="empty-state">Nenhuma loja encontrada para os filtros atuais.</td></tr>`;
       return;
     }
     body.innerHTML =
-      renderRow({ encarregado: 'TOTAL (filtro atual)' }, totalMetrics, true) +
-      rows.map((r) => renderRow(r, r.metrics, false)).join('');
+      renderRow('TOTAL (filtro atual)', '', totalMetrics, true) +
+      rows.map((r) => renderRow(r.encarregado, r.regional, r.metrics, false)).join('');
   }
 
   function renderCoordenadoras() {
@@ -339,12 +362,12 @@
       .map(
         (g) => `
         <tr>
-          <td>${escapeHtml(g.key)}</td>
+          <td class="group-col">${escapeHtml(g.key)}</td>
           <td>${escapeHtml(g.regional)}</td>
           <td class="num">${fmt(g.m.meta)}</td>
           <td class="num">${fmt(g.m.realizado)}</td>
-          <td><span class="pct-chip ${pctClass(g.m.pct)}">${fmtPct(g.m.pct)}</span></td>
-          <td class="num">${fmt(g.m.realizado - g.m.meta)}</td>
+          <td class="num"><span class="pct-chip ${pctClass(g.m.pct)}">${fmtPct(g.m.pct)}</span></td>
+          <td class="num"><span class="pct-chip ${saldoClass(g.m.saldo)}">${fmt(g.m.saldo)}</span></td>
         </tr>`
       )
       .join('');
@@ -358,8 +381,13 @@
       select.innerHTML = state.metricDefs.map((d) => `<option value="${d.key}">${d.label}</option>`).join('');
       select.value = 'servicos';
     }
-    const groupLabels = { loja: 'Loja', encarregado: 'Encarregado', coordenador: 'Coordenador' };
-    $('#rank-col-group').textContent = groupLabels[state.rankGroup];
+  }
+
+  function rankBadge(i) {
+    if (i === 0) return '<span class="rank-badge gold">1</span>';
+    if (i === 1) return '<span class="rank-badge silver">2</span>';
+    if (i === 2) return '<span class="rank-badge bronze">3</span>';
+    return `<span class="rank-badge">${i + 1}</span>`;
   }
 
   function renderRanking() {
@@ -383,30 +411,22 @@
       .map(
         (r, i) => `
         <tr>
-          <td><span class="rank-badge">${i + 1}</span></td>
-          <td>${escapeHtml(r.key)}</td>
+          <td>${rankBadge(i)}</td>
+          <td class="group-col">${escapeHtml(r.key)}</td>
           <td>${escapeHtml(r.regional)}</td>
           <td class="num">${fmt(r.m.meta)}</td>
           <td class="num">${fmt(r.m.realizado)}</td>
-          <td><span class="pct-chip ${pctClass(r.m.pct)}">${fmtPct(r.m.pct)}</span></td>
-          <td class="num">${fmt(r.m.realizado - r.m.meta)}</td>
+          <td class="num"><span class="pct-chip ${pctClass(r.m.pct)}">${r.m.pct >= 0.8 ? '▲' : '▼'} ${fmtPct(r.m.pct)}</span></td>
+          <td class="num" style="font-weight:600;color:${r.m.saldo >= 0 ? 'var(--good)' : 'var(--bad)'}">${fmt(r.m.saldo)}</td>
         </tr>`
       )
       .join('');
   }
 
-  // --- lojas -------------------------------------------------------------
-
-  function renderStoreMetricOptions() {
-    const select = $('#store-metric');
-    if (select.options.length) return;
-    select.innerHTML = state.metricDefs.map((d) => `<option value="${d.key}">${d.label}</option>`).join('');
-    select.value = 'aprovacao';
-  }
+  // --- lojas (tabela completa, todas as métricas lado a lado) --------------------
 
   function renderStoreTable() {
-    const key = $('#store-metric').value || 'aprovacao';
-    let stores = filteredStores(state.current).map((s) => ({ ...s, m: s.metrics[key] }));
+    let stores = filteredStores(state.current).map((s) => ({ ...s, m: s.metrics.aprovacao }));
 
     const { key: sortKey, dir } = state.sort;
     stores.sort((a, b) => {
@@ -415,8 +435,8 @@
         av = a.m ? a.m[sortKey] : 0;
         bv = b.m ? b.m[sortKey] : 0;
       } else {
-        av = (a[sortKey] || '').toLowerCase();
-        bv = (b[sortKey] || '').toLowerCase();
+        av = typeof a[sortKey] === 'number' ? a[sortKey] : (a[sortKey] || '').toLowerCase();
+        bv = typeof b[sortKey] === 'number' ? b[sortKey] : (b[sortKey] || '').toLowerCase();
       }
       if (av < bv) return dir === 'asc' ? -1 : 1;
       if (av > bv) return dir === 'asc' ? 1 : -1;
@@ -425,22 +445,34 @@
 
     const body = $('#store-body');
     if (!stores.length) {
-      body.innerHTML = `<tr><td colspan="7" class="empty-state">Nenhuma loja encontrada para os filtros atuais.</td></tr>`;
+      body.innerHTML = `<tr><td colspan="18" class="empty-state">Nenhuma loja encontrada para os filtros atuais.</td></tr>`;
       return;
     }
     body.innerHTML = stores
-      .map(
-        (s) => `
+      .map((s) => {
+        const m = s.metrics;
+        return `
         <tr>
-          <td>${escapeHtml(s.loja)}</td>
+          <td class="group-col">${escapeHtml(s.loja)}</td>
+          <td class="num">${s.codigoLoja ?? ''}</td>
           <td>${escapeHtml(s.encarregado)}</td>
           <td>${escapeHtml(s.coordenador)}</td>
           <td>${escapeHtml(s.regional)}</td>
-          <td class="num">${s.m ? fmt(s.m.meta) : '—'}</td>
-          <td class="num">${s.m ? fmt(s.m.realizado) : '—'}</td>
-          <td>${s.m ? `<span class="pct-chip ${pctClass(s.m.pct)}">${fmtPct(s.m.pct)}</span>` : '—'}</td>
-        </tr>`
-      )
+          <td class="num">${fmt(m.aprovacao.meta)}</td>
+          <td class="num">${fmt(m.aprovacao.realizado)}</td>
+          <td class="num"><span class="pct-chip ${pctClass(m.aprovacao.pct)}">${fmtPct(m.aprovacao.pct)}</span></td>
+          <td class="num"><span class="pct-chip ${saldoClass(m.aprovacao.saldo)}">${fmt(m.aprovacao.saldo)}</span></td>
+          <td class="num">${fmt(m.ativacao.meta)}</td>
+          <td class="num">${fmt(m.ativacao.realizado)}</td>
+          <td class="num">${fmt(m.fatura_garantida.meta)}</td>
+          <td class="num">${fmt(m.fatura_garantida.realizado)}</td>
+          <td class="num">${fmt(m.odonto.realizado)}/${fmt(m.odonto.meta)}</td>
+          <td class="num">${fmt(m.auto_moto.realizado)}/${fmt(m.auto_moto.meta)}</td>
+          <td class="num">${fmt(m.casa_protegida.realizado)}/${fmt(m.casa_protegida.meta)}</td>
+          <td class="num">${fmt(m.vida_premiada.realizado)}/${fmt(m.vida_premiada.meta)}</td>
+          <td class="num">${fmt(m.pet.realizado)}/${fmt(m.pet.meta)}</td>
+        </tr>`;
+      })
       .join('');
   }
 
@@ -451,10 +483,9 @@
     renderChart();
     renderRankingOptions();
     renderRanking();
-    renderStoreMetricOptions();
-    renderStoreTable();
     renderPainel();
     renderCoordenadoras();
+    renderStoreTable();
   }
 
   // --- data loading -------------------------------------------------------------
@@ -462,14 +493,11 @@
   async function loadDashboard() {
     const res = await fetch('/api/dashboard');
     const data = await res.json();
-    state.title = data.title;
     state.metricDefs = data.metricDefs;
     state.current = data.current;
     state.previous = data.previous;
     state.dailySeries = data.dailySeries || [];
-
-    document.title = state.title;
-    $('#portal-title').textContent = state.title;
+    document.title = data.title || document.title;
 
     if (!state.current) {
       $('#report-meta').textContent = 'Nenhum dado carregado ainda — envie a planilha manualmente ou aguarde a sincronização.';
@@ -519,9 +547,9 @@
       renderKpis();
       renderChart();
       renderRanking();
-      renderStoreTable();
       renderPainel();
       renderCoordenadoras();
+      renderStoreTable();
     };
 
     ['#f-search', '#f-regional', '#f-gerente', '#f-coordenador', '#f-encarregado'].forEach((id) => {
@@ -544,7 +572,6 @@
     $('#chart-metric').addEventListener('change', renderChart);
     $('#rank-metric').addEventListener('change', renderRanking);
     $('#rank-group').addEventListener('change', renderRanking);
-    $('#store-metric').addEventListener('change', renderStoreTable);
 
     document.querySelectorAll('#store-table th[data-sort]').forEach((th) => {
       th.addEventListener('click', () => {

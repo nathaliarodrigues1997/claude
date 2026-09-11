@@ -4,24 +4,25 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Portal de Produção Comercial</title>
+  <link rel="icon" href="vuon-logo.png" />
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
   <div class="app">
     <header class="navbar">
       <div class="navbar__brand">
-        <span class="navbar__mark">V</span>
+        <img src="vuon-logo.png" alt="Vuon" class="navbar__mark" />
         <div>
-          <h1 id="portal-title">Portal de Produção Comercial</h1>
+          <h1 id="portal-title">Vendas Cartões</h1>
           <p id="report-meta" class="navbar__meta">Carregando dados…</p>
         </div>
       </div>
 
       <nav class="navbar__tabs" id="view-tabs">
-        <button class="navtab is-active" data-view="inicio">Início</button>
-        <button class="navtab" data-view="grafico">Gráfico Vendas</button>
-        <button class="navtab" data-view="painel">Painel Comercial</button>
-        <button class="navtab" data-view="ranking">Ranking</button>
+        <button class="navtab is-active" data-view="inicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1"/><rect x="14" y="3" width="7" height="5" rx="1"/><rect x="14" y="12" width="7" height="9" rx="1"/><rect x="3" y="16" width="7" height="5" rx="1"/></svg><span>Início</span></button>
+        <button class="navtab" data-view="grafico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="13" y="8" width="3" height="10"/><rect x="19" y="5" width="3" height="13"/></svg><span>Gráfico Vendas</span></button>
+        <button class="navtab" data-view="painel"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9.5 12 3l9 6.5"/><path d="M5 9.5V20a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1V9.5"/></svg><span>Painel Comercial</span></button>
+        <button class="navtab" data-view="ranking"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a2 2 0 0 0 2 4"/><path d="M17 6h3a2 2 0 0 1-2 4"/></svg><span>Ranking</span></button>
       </nav>
 
       <div class="navbar__actions">
@@ -59,13 +60,16 @@
       <div id="view-grafico" class="view">
         <section class="panel" aria-label="Tendência">
           <div class="panel__header">
-            <h2 class="section-title section-title--inline">Vendas por dia e acumulado no mês</h2>
+            <h2 class="section-title section-title--inline" id="chart-title">Vendas Dia e Acumulado Mês</h2>
             <div class="panel__controls">
               <label for="chart-metric">Indicador</label>
               <select id="chart-metric"></select>
             </div>
           </div>
-          <div id="chart-container" class="chart-container"></div>
+          <div class="panel__body-pad">
+            <p id="chart-subtitle" style="margin:-8px 0 14px;font-size:0.82rem;color:var(--text-muted)"></p>
+            <div id="chart-container" class="chart-container"></div>
+          </div>
         </section>
       </div>
 
@@ -79,7 +83,7 @@
 
           <div id="painel-regional" class="subview is-active">
             <div class="table-scroll">
-              <table class="table table--wide" id="painel-table">
+              <table class="table table--dense" id="painel-table">
                 <thead id="painel-head"></thead>
                 <tbody id="painel-body"></tbody>
               </table>
@@ -87,48 +91,62 @@
           </div>
 
           <div id="painel-coordenadoras" class="subview">
-            <table class="table">
-              <thead>
-                <tr>
-                  <th>Coordenador</th>
-                  <th>Regional</th>
-                  <th>Meta</th>
-                  <th>Atual</th>
-                  <th>% Meta</th>
-                  <th>Saldo</th>
-                </tr>
-              </thead>
-              <tbody id="coord-body"></tbody>
-            </table>
+            <div class="table-scroll">
+              <table class="table">
+                <thead>
+                  <tr class="table-head-gradient">
+                    <th>Coordenador</th>
+                    <th>Regional</th>
+                    <th class="num">Meta</th>
+                    <th class="num">Atual</th>
+                    <th class="num">% Meta</th>
+                    <th class="num">Saldo</th>
+                  </tr>
+                </thead>
+                <tbody id="coord-body"></tbody>
+              </table>
+            </div>
           </div>
 
           <div id="painel-lojas" class="subview">
-            <div class="panel__controls" style="margin-bottom:12px">
-              <label for="store-metric">Indicador</label>
-              <select id="store-metric"></select>
+            <div class="table-scroll">
+              <table class="table table--dense" id="store-table">
+                <thead>
+                  <tr class="table-head-gradient">
+                    <th data-sort="loja">Loja</th>
+                    <th data-sort="codigoLoja" class="num">Cód.</th>
+                    <th data-sort="encarregado">Encarregado</th>
+                    <th data-sort="coordenador">Coordenador</th>
+                    <th data-sort="regional">Regional</th>
+                    <th class="num">Meta</th>
+                    <th class="num">Realizado</th>
+                    <th class="num">% Meta</th>
+                    <th class="num">Saldo</th>
+                    <th class="num">M. Ativ.</th>
+                    <th class="num">Ativados</th>
+                    <th class="num">Fat. Gar.</th>
+                    <th class="num">R. Fat.</th>
+                    <th class="num">Odonto</th>
+                    <th class="num">Auto</th>
+                    <th class="num">Casa</th>
+                    <th class="num">Vida</th>
+                    <th class="num">Pet</th>
+                  </tr>
+                </thead>
+                <tbody id="store-body"></tbody>
+              </table>
             </div>
-            <table class="table" id="store-table">
-              <thead>
-                <tr>
-                  <th data-sort="loja">Loja</th>
-                  <th data-sort="encarregado">Encarregado</th>
-                  <th data-sort="coordenador">Coordenador</th>
-                  <th data-sort="regional">Regional</th>
-                  <th data-sort="meta">Meta</th>
-                  <th data-sort="realizado">Realizado</th>
-                  <th data-sort="pct">% Meta</th>
-                </tr>
-              </thead>
-              <tbody id="store-body"></tbody>
-            </table>
           </div>
         </section>
       </div>
 
       <div id="view-ranking" class="view">
         <section class="panel" aria-label="Ranking">
-          <div class="panel__header">
-            <h2 class="section-title section-title--inline">Ranking por % meta</h2>
+          <div class="panel__header gradient">
+            <h2 class="section-title section-title--inline panel__title-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v6a5 5 0 0 1-10 0V4z"/><path d="M7 6H4a2 2 0 0 0 2 4"/><path d="M17 6h3a2 2 0 0 1-2 4"/></svg>
+              Ranking por % Meta
+            </h2>
             <div class="panel__controls">
               <label for="rank-group">Agrupar por</label>
               <select id="rank-group">
@@ -140,20 +158,22 @@
               <select id="rank-metric"></select>
             </div>
           </div>
-          <table class="table">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th id="rank-col-group">Loja</th>
-                <th>Regional</th>
-                <th>Meta</th>
-                <th>Realizado</th>
-                <th>% Meta</th>
-                <th>Saldo</th>
-              </tr>
-            </thead>
-            <tbody id="rank-body"></tbody>
-          </table>
+          <div class="table-scroll">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th id="rank-col-group">Loja</th>
+                  <th>Regional</th>
+                  <th class="num">Meta</th>
+                  <th class="num">Realizado</th>
+                  <th class="num">% Meta</th>
+                  <th class="num">Saldo</th>
+                </tr>
+              </thead>
+              <tbody id="rank-body"></tbody>
+            </table>
+          </div>
         </section>
       </div>
     </main>
