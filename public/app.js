@@ -234,7 +234,7 @@
 
     const linePoints = cumulative.map((v, i) => `${xAt(i).toFixed(1)},${yLine(v).toFixed(1)}`).join(' ');
     const dots = cumulative
-      .map((v, i) => `<circle cx="${xAt(i).toFixed(1)}" cy="${yLine(v).toFixed(1)}" r="4" fill="var(--bad)"/>`)
+      .map((v, i) => `<circle cx="${xAt(i).toFixed(1)}" cy="${yLine(v).toFixed(1)}" r="4" fill="var(--cyan)"/>`)
       .join('');
 
     const xLabels = series
@@ -252,13 +252,13 @@
       <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Gráfico de vendas por dia e acumulado no mês">
         ${gridY}
         ${bars}
-        <polyline points="${linePoints}" fill="none" stroke="var(--bad)" stroke-width="2.5"/>
+        <polyline points="${linePoints}" fill="none" stroke="var(--cyan)" stroke-width="2.5"/>
         ${dots}
         ${xLabels}
       </svg>
       <div class="chart-legend" style="display:flex;gap:16px;margin-top:6px;font-size:0.76rem;color:var(--text-muted)">
         <span><span style="display:inline-block;width:9px;height:9px;border-radius:2px;background:var(--primary);margin-right:5px"></span>Vendas do dia</span>
-        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--bad);margin-right:5px"></span>Acumulado mês</span>
+        <span><span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--cyan);margin-right:5px"></span>Acumulado mês</span>
       </div>`;
   }
 

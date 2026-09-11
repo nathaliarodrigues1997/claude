@@ -1,17 +1,21 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
 :root {
-  --background: hsl(250 15% 97%);
+  /* Paleta extraída diretamente do site institucional (vuon.com.br): fundo
+     roxo-índigo #4526A3, acento ciano #65DBFB e acento dourado #F7CE45. */
+  --background: #f5f4fb;
   --surface: #ffffff;
-  --surface-2: hsl(250 15% 93%);
-  --border: hsl(250 15% 90%);
-  --text: hsl(250 25% 10%);
-  --text-muted: hsl(250 10% 45%);
+  --surface-2: #efedf9;
+  --border: #e1ddf2;
+  --text: #1a1330;
+  --text-muted: #675f80;
 
-  --primary: hsl(270 80% 50%);
-  --primary-2: hsl(290 70% 55%);
-  --header-from: hsl(270 85% 30%);
-  --header-to: hsl(270 75% 45%);
+  --primary: #4526a3;
+  --primary-2: #6a3fd6;
+  --header-from: #2c1870;
+  --header-to: #4526a3;
+  --cyan: #12b6e8;
+  --gold: #f0b820;
 
   --good: hsl(142 76% 32%);
   --good-soft: hsl(142 76% 94%);
@@ -22,8 +26,8 @@
 
   --gradient-primary: linear-gradient(135deg, var(--primary), var(--primary-2));
   --gradient-header: linear-gradient(135deg, var(--header-from), var(--header-to));
-  --shadow: 0 1px 3px hsl(270 20% 50% / 0.08), 0 1px 2px -1px hsl(270 20% 50% / 0.08);
-  --shadow-elevated: 0 10px 30px -10px hsl(270 50% 30% / 0.15);
+  --shadow: 0 1px 3px rgba(44, 24, 112, 0.08), 0 1px 2px -1px rgba(44, 24, 112, 0.08);
+  --shadow-elevated: 0 10px 30px -10px rgba(44, 24, 112, 0.22);
 
   --radius: 0.75rem;
   --radius-sm: 8px;
@@ -244,7 +248,7 @@ h1, h2, h3, .font-display, .kpi-card__pct, .navbar h1 {
 }
 .table th[data-sort] { cursor: pointer; }
 .table td { padding: 9px 10px; border-bottom: 1px solid var(--border); white-space: nowrap; }
-.table tbody tr:hover { background: hsl(270 60% 92% / 0.35); }
+.table tbody tr:hover { background: rgba(69, 38, 163, 0.06); }
 .table td.num, .table th.num { text-align: center; font-variant-numeric: tabular-nums; }
 .table .rank-badge {
   display: inline-flex; align-items: center; justify-content: center;
