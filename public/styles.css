@@ -51,23 +51,24 @@ h1, h2, h3, .font-display, .kpi-card__pct, .navbar h1 {
 .navbar {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 0 24px;
-  height: 64px;
+  gap: 16px 24px;
+  padding: 10px 24px;
+  min-height: 64px;
   background: var(--gradient-header);
   color: #fff;
   flex-wrap: wrap;
+  row-gap: 10px;
   position: sticky;
   top: 0;
   z-index: 50;
 }
 
 .navbar__brand { display: flex; align-items: center; gap: 12px; margin-right: auto; }
-.navbar__mark { height: 30px; width: auto; filter: brightness(0) invert(1); display: block; }
+.navbar__mark { height: 32px; width: 32px; border-radius: 9px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.35); display: block; }
 .navbar h1 { font-size: 1.05rem; margin: 0; font-weight: 700; letter-spacing: -0.01em; }
 .navbar__meta { margin: 1px 0 0; font-size: 0.75rem; color: rgba(255, 255, 255, 0.75); font-family: "Inter", sans-serif; }
 
-.navbar__tabs { display: flex; gap: 2px; }
+.navbar__tabs { display: flex; gap: 2px; flex-wrap: wrap; }
 .navtab {
   display: flex; align-items: center; gap: 7px;
   border: none; background: none; color: rgba(255, 255, 255, 0.75);
@@ -78,7 +79,7 @@ h1, h2, h3, .font-display, .kpi-card__pct, .navbar h1 {
 .navtab.is-active { background: rgba(255, 255, 255, 0.16); color: #fff; }
 .navtab:hover:not(.is-active) { color: #fff; }
 
-.navbar__actions { display: flex; align-items: center; gap: 10px; }
+.navbar__actions { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 
 .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); display: inline-block; }
 .sync-dot.ok { background: #4ade80; }
@@ -279,8 +280,18 @@ h1, h2, h3, .font-display, .kpi-card__pct, .navbar h1 {
 
 .empty-state { padding: 40px 20px; text-align: center; color: var(--text-muted); font-size: 0.9rem; }
 
+@media (max-width: 760px) {
+  .navtab span { display: none; }
+  .navtab { padding: 9px 11px; }
+  .navtab svg { width: 18px; height: 18px; }
+}
 @media (max-width: 640px) {
   .content { padding: 16px; }
-  .navbar { padding: 0 16px; height: auto; min-height: 60px; }
-  .navbar__tabs { order: 3; width: 100%; overflow-x: auto; padding-bottom: 8px; }
+  .navbar { padding: 10px 16px; min-height: 60px; }
+  .navbar__brand { width: 100%; }
+  .navbar__tabs { order: 3; width: 100%; justify-content: flex-start; }
+  .navbar__actions { width: 100%; justify-content: flex-start; }
+  .sync-label { display: none; }
+  .filters__search { width: 100%; }
+  .filters select { flex: 1 1 auto; }
 }
